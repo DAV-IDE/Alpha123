@@ -108,24 +108,6 @@ def packet_to_rdf(payload, risk="low", score=None, mean_a_t=None):
 
     return g
 
-def send_to_fuseki(graph):
-    # Serialize to N-Triples for INSERT DATA
-    triples_nt = graph.serialize(format="nt")
-    update = f"INSERT DATA {{ {triples_nt} }}"
-
-    try:
-        response = requests.post(
-            "http://fuseki:3030/ds/update",
-            data=update,
-            headers={"Content-Type": "application/sparql-update"},
-            auth=fuseki_auth(),  # Authentication
-            timeout=5
-        )
-        if response.status_code not in (200, 201, 204):
-            print(f"[ERROR] Fuseki insert failed: {response.status_code} - {response.text[:200]}")
-    except Exception as e:
-        print(f"[ERROR] Cannot send to Fuseki: {e}")
-
 # ======================= O2 - ENTROPY & THRESHOLDING =======================
 entropy_config = {
     'window_sizes': ENTROPY_WINDOW_SIZES,
@@ -256,6 +238,45 @@ def compute_hybrid_loss(score, y_true, W, W_gt, G, alpha=alpha, beta=beta, gamma
 
     return alpha * L_cls + beta * L_graph + gamma * L_sem
 
+# ======================= O5 - SEMANTIC INJECTION =======================
+def send_to_fuseki(graph):
+    """
+    Implements the Semantic Injection mechanism (O5).
+    Pushes the local knowledge graph updates to the remote Fuseki endpoint.
+    """
+    # Serialize to N-Triples for INSERT DATA
+    triples_nt = graph.serialize(format="nt")
+    update = f"INSERT DATA {{ {triples_nt} }}"
+
+    try:
+        response = requests.post(
+            "http://fuseki:3030/ds/update",
+            data=update,
+            headers={"Content-Type": "application/sparql-update"},
+            auth=fuseki_auth(),  # Authentication
+            timeout=5
+        )
+        if response.status_code not in (200, 201, 204):
+            print(f"[ERROR] Fuseki insert failed: {response.status_code} - {response.text[:200]}")
+    except Exception as e:
+        print(f"[ERROR] Cannot send to Fuseki: {e}")
+
+# ======================= O6 - MITIGATION & POLICIES =======================
+def apply_mitigation_policy(src_ip, risk_score):
+    """
+    Implements the Mitigation Logic (O6).
+    Applies latency penalties and logs the action.
+    """
+    mitigation_start = time.time()
+    time.sleep(0.01) # Simulate enforcement latency
+    mitigation_time = (time.time() - mitigation_start) * 1000
+    performance_metrics['mitigation_times'].append(mitigation_time)
+
+    with open('/app/results/mitigation_times.csv', 'a') as f:
+        f.write(f"{time.time()},{mitigation_time},{src_ip},{risk_score}\n")
+
+    print(f"[MITIGATION] Policy applied for {src_ip} (Score: {risk_score:.2f})")
+
 # ======================= AUXILIARY & METRICS FUNCTIONS =======================
 
 def calculate_confidence_interval(data, confidence=0.95):
@@ -378,17 +399,6 @@ def execute_diagnostic_queries():
             print(f"[SPARQL DIAGNOSTIC] Check passed in {lat:.2f}ms")
     except Exception as e:
         print(f"[DIAGNOSTIC ERROR] {e}")
-
-def apply_mitigation_policy(src_ip, risk_score):
-    mitigation_start = time.time()
-    time.sleep(0.01) # Simulate enforcement latency
-    mitigation_time = (time.time() - mitigation_start) * 1000
-    performance_metrics['mitigation_times'].append(mitigation_time)
-
-    with open('/app/results/mitigation_times.csv', 'a') as f:
-        f.write(f"{time.time()},{mitigation_time},{src_ip},{risk_score}\n")
-
-    print(f"[MITIGATION] Policy applied for {src_ip} (Score: {risk_score:.2f})")
 
 # ======================= TRAINING LOOP =======================
 
@@ -515,7 +525,7 @@ def on_message(client, userdata, message):
                 send_to_fuseki(G)
                 print("[GRAPH] MSU Sync executed")
 
-            # 6. Ψ-GATING (Online Learning)
+            # Ψ-GATING (Online Learning)
             if delta_H > tau_s and mean_a_t > theta:
                 print(f"[Ψ GATE] Online update trigger (ΔH={delta_H:.3f}, a_t={mean_a_t:.3f})")
                 arnn.train()
@@ -531,6 +541,7 @@ def on_message(client, userdata, message):
             if random.random() < 0.05:
                 execute_diagnostic_queries()
 
+            # 6. MITIGATION POLICY (O6 Mechanism)
             if risk_label == "high":
                 print(f"🚨 [ALERT] HOST {payload['src']} UNDER ATTACK! Risk Score: {score.item():.4f}")
                 apply_mitigation_policy(payload['src'], score.item())
