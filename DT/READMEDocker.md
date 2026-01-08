@@ -62,13 +62,17 @@ docker exec -it iot-simulator python iot_simulator.py --mode attack --interval 2
 ```
 > **Tip:** To terminate a manual simulation early, use `Ctrl+C`.
 
-### 2. Automatic Experiment (Replay)
+[//]: # (### 2. Automatic Experiment &#40;Replay&#41;)
 
-To run a full simulation based on the settings defined in `experiment_config.yaml`:
+[//]: # ()
+[//]: # (To run a full simulation based on the settings defined in `experiment_config.yaml`:)
 
-```bash    
-docker exec -it iot-simulator python replay_simulation.py
-```
+[//]: # ()
+[//]: # (```bash    )
+
+[//]: # (docker exec -it iot-simulator python replay_simulation.py)
+
+[//]: # (```)
 ## Verifying Results & Logs
 
 ### Check Generated Files
