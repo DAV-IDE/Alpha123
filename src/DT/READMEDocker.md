@@ -2,15 +2,6 @@
 
 > **Note on Availability:** The containerized infrastructure described in this document is currently a **target setup** under development. The configuration files (`Dockerfile`, `docker-compose.yaml`) are scheduled for a future release to ensure full cross-platform reproducibility.
 
-## Planned Architecture
-
-The intended environment will consist of four orchestrated services to ensure isolation of the **Ψ-Risk-DT** components:
-
-1.  **mqtt-broker**: Eclipse Mosquitto (v2.0) for IoT telemetry transport.
-2.  **fuseki**: Apache Jena Fuseki (v4.x) serving as the Semantic Knowledge Graph endpoint.
-3.  **digital-twin**: The Python-based neurosymbolic reasoning engine.
-4.  **iot-simulator**: A utility to generate synthetic normal and attack traffic patterns.
-
 ---
 
 ## Targeted Workflow
