@@ -9,14 +9,14 @@
 Once the infrastructure files are integrated, the reproducibility workflow will follow these standard steps:
 
 ### 1. Build & Configuration
-The setup will rely on an `experiment_config.yaml` file to manage credentials,parameters and ports, followed by the standard build command:
+The setup will rely on an `experiment_config.yaml` file to manage credentials, parameters and ports, followed by the standard build command:
 
 ```bash    
 # Planned command:
 # docker-compose up -d --build
 ```
 
-## 2. Launch Baseline
+### 2. Launch Baseline
 To capture normal traffic metrics for the $\Psi$ baseline:
 
 ```bash
@@ -24,7 +24,7 @@ To capture normal traffic metrics for the $\Psi$ baseline:
 # docker exec -it iot-simulator python iot_simulator.py --mode normal
 ```
 
-## 3. Launch Attack
+### 3. Launch Attack
 To simulate a DDoS (NTP Amplification) attack:
 
 ```bash
@@ -32,5 +32,5 @@ To simulate a DDoS (NTP Amplification) attack:
 # docker exec -it iot-simulator python iot_simulator.py --mode attack
 ```
 
-## 4. Aggregate Results
+### 4. Aggregate Results
 After execution, the aggregated JSON reports will be generated.
